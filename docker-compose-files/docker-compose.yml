@@ -1,0 +1,10 @@
+services:
+
+  slava-s-bank-fastapi-database:
+    image: postgres
+    environment:
+      POSTGRES_DB: slava-s-bank-fastapi
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
