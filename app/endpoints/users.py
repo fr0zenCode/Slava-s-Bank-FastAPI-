@@ -1,6 +1,9 @@
-from fastapi import APIRouter
+from typing import Annotated
 
-from app.services.users.schemas import AddUserSchema
+from fastapi import APIRouter, Depends
+
+from repositories.users.schemas import AddUserFromEndpointsSchema
+from services.users.service import UsersService, get_users_service
 
 users_router = APIRouter(prefix="/users", tags=["Users API"])
 
@@ -11,6 +14,12 @@ async def get_user(user_id: str):
 
 
 @users_router.post("/create-user")
-async def create_user(user: AddUserSchema):
-    return {"successfully": True,
-            "new-user": user}
+async def create_user(
+        user: AddUserFromEndpointsSchema,
+        users_service: Annotated[UsersService, Depends(get_users_service)]
+):
+    new_user_id = await users_service.create_user(user=user)
+    return {
+        "successful": True,
+        "created-user-id": new_user_id.value
+    }
