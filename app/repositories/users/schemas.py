@@ -7,8 +7,7 @@ from pydantic import BaseModel, EmailStr, field_validator
 from app.services.users.exceptions import InvalidPhoneNumberException
 
 
-class AddUserSchema(BaseModel):
-
+class AddUserFromEndpointsSchema(BaseModel):
     first_name: str
     last_name: str
     surname: str
@@ -25,3 +24,11 @@ class AddUserSchema(BaseModel):
         if not cls.RUSSIAN_PHONE_NUMBER_REGEX.match(value):
             raise InvalidPhoneNumberException(phone_number=value)
         return value
+
+
+class AddUserSchema(AddUserFromEndpointsSchema):
+    id: str
+
+
+class UserID(BaseModel):
+    value: str
