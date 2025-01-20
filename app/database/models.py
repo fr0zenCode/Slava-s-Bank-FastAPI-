@@ -1,21 +1,54 @@
-from datetime import date
+from datetime import date, timedelta, datetime
+from typing import Optional
 
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
-class Base(DeclarativeBase):
-    ...
+from database.core import Base
+from database.enums import TransactionStatus, AccountStatus, OperationType
+from database.schemas import UserSchema, AccountSchema, TransactionSchema
 
 
 class Users(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(primary_key=True)
-    balance_id: Mapped[str] = mapped_column(nullable=True)
     first_name: Mapped[str]
-    second_name: Mapped[str]
-    surname: Mapped[str] = mapped_column(nullable=True)
+    last_name: Mapped[str]
+    surname: Mapped[Optional[str]]
     date_of_birth: Mapped[date]
-    registration_date: Mapped[date]
+    registration_date: Mapped[date] = mapped_column(default=date.today())
     phone: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+
+    handled_accounts: Mapped[list["Accounts"]] = relationship("Accounts", back_populates="handler")
+
+
+class Accounts(Base):
+    __tablename__ = "accounts"
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    handler_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    creation_date: Mapped[date] = mapped_column(default=date.today())
+    inspiration_date: Mapped[date] = mapped_column(default=date.today() + timedelta(days=(5 * 365)))
+    balance: Mapped[float] = mapped_column(default=0.00)
+    account_status: Mapped[AccountStatus] = mapped_column(default=AccountStatus.ACTIVE)
+
+    handler: Mapped["Users"] = relationship("Users", back_populates="handled_accounts")
+
+
+class Transactions(Base):
+    __tablename__ = "transactions"
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    amount: Mapped[float] = mapped_column(nullable=False)
+    initializer_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), nullable=False)
+    recipient_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), nullable=False)
+    status: Mapped[TransactionStatus] = mapped_column(default=TransactionStatus.PENDING)
+    operation_type: Mapped[OperationType]
+    transaction_date: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+
+    initializer: Mapped["Accounts"] = relationship("Accounts", foreign_keys=[initializer_id])
+    recipient: Mapped["Accounts"] = relationship("Accounts", foreign_keys=[recipient_id])
+
