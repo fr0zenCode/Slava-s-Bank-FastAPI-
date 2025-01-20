@@ -1,6 +1,7 @@
 services:
 
   slava-s-bank-fastapi-database:
+    container_name: "slava-s-bank-fastapi-database-postgres"
     image: postgres
     environment:
       POSTGRES_DB: slava-s-bank-fastapi
