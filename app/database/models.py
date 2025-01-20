@@ -24,6 +24,19 @@ class Users(Base):
 
     handled_accounts: Mapped[list["Accounts"]] = relationship("Accounts", back_populates="handler")
 
+    def convert_to_pydantic_model(self) -> UserSchema:
+        return UserSchema(
+            id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            surname=self.surname,
+            date_of_birth=self.date_of_birth,
+            registration_date=self.registration_date,
+            phone=self.phone,
+            email=self.email,
+            is_active=self.is_active
+        )
+
 
 class Accounts(Base):
     __tablename__ = "accounts"
@@ -36,6 +49,16 @@ class Accounts(Base):
     account_status: Mapped[AccountStatus] = mapped_column(default=AccountStatus.ACTIVE)
 
     handler: Mapped["Users"] = relationship("Users", back_populates="handled_accounts")
+
+    def convert_to_pydantic_model(self) -> AccountSchema:
+        return AccountSchema(
+            id=self.id,
+            handler_id=self.handler_id,
+            creation_date=self.creation_date,
+            inspiration_date=self.inspiration_date,
+            balance=self.balance,
+            account_status=self.account_status
+        )
 
 
 class Transactions(Base):
@@ -52,3 +75,13 @@ class Transactions(Base):
     initializer: Mapped["Accounts"] = relationship("Accounts", foreign_keys=[initializer_id])
     recipient: Mapped["Accounts"] = relationship("Accounts", foreign_keys=[recipient_id])
 
+    def convert_to_pydantic_model(self) -> TransactionSchema:
+        return TransactionSchema(
+            id=self.id,
+            amount=self.amount,
+            initializer_id=self.initializer_id,
+            recipient_id=self.recipient_id,
+            status=self.status,
+            operation_type=self.operation_type,
+            transaction_date=self.transaction_date
+        )
