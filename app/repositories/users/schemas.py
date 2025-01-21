@@ -30,8 +30,24 @@ class AddUserSchema(AddUserFromEndpointsSchema):
     id: str
 
 
+class UserSchema(AddUserSchema):
+    ...
+
+
 class UserID(BaseModel):
     value: str
+
+
+class PhoneNumber(BaseModel):
+    value: str
+
+    RUSSIAN_PHONE_NUMBER_REGEX: ClassVar[re.Pattern] = re.compile(r"^(\+7|8)\d{10}$")
+
+    @field_validator("value")
+    def validate_russian_phone_number(cls, phone):
+        if not cls.RUSSIAN_PHONE_NUMBER_REGEX.match(phone):
+            raise InvalidPhoneNumberException(phone_number=phone)
+        return phone
 
 
 class SuccessfulMessageJSON(BaseModel):
