@@ -32,3 +32,11 @@ class AddUserSchema(AddUserFromEndpointsSchema):
 
 class UserID(BaseModel):
     value: str
+
+
+class SuccessfulMessageJSON(BaseModel):
+    message: str = {"successful": True}
+
+
+class UnsuccessfulMessageJSON(BaseModel):
+    message: str = {"successful": False}
