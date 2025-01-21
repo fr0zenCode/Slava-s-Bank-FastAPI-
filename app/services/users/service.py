@@ -2,7 +2,8 @@ from uuid import uuid4
 from dataclasses import dataclass
 
 from repositories import get_sqlalchemy_postgres_users_repository
-from repositories.users.schemas import AddUserSchema, UserID, AddUserFromEndpointsSchema
+from repositories.users.schemas import AddUserSchema, UserID, AddUserFromEndpointsSchema, SuccessfulMessageJSON, \
+    UnsuccessfulMessageJSON
 
 
 @dataclass
@@ -29,8 +30,9 @@ class UsersService:
         print("Создали юзерка, сейчас вернем.")
         return new_user_id
 
-    async def deactivate_user(self):
-        ...
+    async def deactivate_user_by_id(self, user_id: UserID) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        await self.users_repository.deactivate_user_by_id(user_id=user_id)
+        return SuccessfulMessageJSON()
 
     async def get_user_by_id(self):
         ...

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from datetime import date
 
-from sqlalchemy import insert, values
+from sqlalchemy import insert, update
 
 from .abstract import AbstractUsersRepository
 from database.models import Users
 from database.core import get_sqlalchemy_async_database_helper
-from .schemas import AddUserSchema, UserID
+from .schemas import AddUserSchema, UserID, SuccessfulMessageJSON, UnsuccessfulMessageJSON
 
 
 @dataclass
@@ -32,8 +32,12 @@ class SQLAlchemyPostgresUsersRepository(AbstractUsersRepository):
             await session.commit()
             return UserID(value=new_user_id.scalar_one())
 
-    async def deactivate_user(self):
-        ...
+    async def deactivate_user_by_id(self, user_id: UserID) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        async with self.session_factory() as session:
+            stmt = update(Users).values(is_active=False).where(Users.id == user_id.value)
+            await session.execute(stmt)
+            await session.commit()
+            return SuccessfulMessageJSON()
 
     async def get_user_by_id(self):
         ...
