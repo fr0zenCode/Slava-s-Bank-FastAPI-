@@ -11,7 +11,7 @@ class AbstractUsersRepository(ABC):
         ...
 
     @abstractmethod
-    async def deactivate_user(self):
+    async def deactivate_user_by_id(self, user_id: UserID):
         ...
 
     @abstractmethod
