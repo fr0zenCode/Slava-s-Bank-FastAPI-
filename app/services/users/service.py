@@ -1,9 +1,11 @@
 from uuid import uuid4
 from dataclasses import dataclass
 
+from pydantic import EmailStr
+
 from repositories import get_sqlalchemy_postgres_users_repository
 from repositories.users.schemas import AddUserSchema, UserID, AddUserFromEndpointsSchema, SuccessfulMessageJSON, \
-    UnsuccessfulMessageJSON
+    UnsuccessfulMessageJSON, UserSchema, PhoneNumber
 
 
 @dataclass
@@ -34,14 +36,21 @@ class UsersService:
         await self.users_repository.deactivate_user_by_id(user_id=user_id)
         return SuccessfulMessageJSON()
 
-    async def get_user_by_id(self):
-        ...
+    async def activate_user_by_id(self, user_id: UserID) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        await self.users_repository.activate_user_by_id(user_id=user_id)
+        return SuccessfulMessageJSON()
 
-    async def get_user_by_phone(self):
-        ...
+    async def get_user_by_id(self, user_id: UserID) -> UserSchema:
+        user_as_pydantic_model = await self.users_repository.get_user_by_id(user_id=user_id)
+        return user_as_pydantic_model
 
-    async def get_user_by_email(self):
-        ...
+    async def get_user_by_email(self, email: EmailStr) -> UserSchema:
+        user_as_pydantic_model = await self.users_repository.get_user_by_email(email=email)
+        return user_as_pydantic_model
+
+    async def get_user_by_phone(self, phone: PhoneNumber) -> UserSchema:
+        user_as_pydantic_model = await self.users_repository.get_user_by_phone(phone=phone)
+        return user_as_pydantic_model
 
 
 def get_users_service() -> UsersService:
