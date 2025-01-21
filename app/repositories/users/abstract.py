@@ -1,7 +1,15 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
-from repositories.users.schemas import AddUserSchema, UserID
+from pydantic import EmailStr
+
+from repositories.users.schemas import (
+    AddUserSchema,
+    UserID,
+    SuccessfulMessageJSON,
+    UnsuccessfulMessageJSON,
+    UserSchema, PhoneNumber
+)
 
 
 @dataclass
@@ -11,17 +19,21 @@ class AbstractUsersRepository(ABC):
         ...
 
     @abstractmethod
-    async def deactivate_user_by_id(self, user_id: UserID):
+    async def deactivate_user_by_id(self, user_id: UserID) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
         ...
 
     @abstractmethod
-    async def get_user_by_id(self):
+    async def activate_user_by_id(self, user_id: UserID) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
         ...
 
     @abstractmethod
-    async def get_user_by_email(self):
+    async def get_user_by_id(self, user_id: UserID) -> UserSchema:
         ...
 
     @abstractmethod
-    async def get_user_by_phone(self):
+    async def get_user_by_email(self, email: EmailStr) -> UserSchema:
+        ...
+
+    @abstractmethod
+    async def get_user_by_phone(self, phone: PhoneNumber) -> UserSchema:
         ...
