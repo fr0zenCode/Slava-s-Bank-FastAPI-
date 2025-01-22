@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 
-from sqlalchemy import insert
+from sqlalchemy import insert, update, select
 
+from database.enums import AccountStatus
 from database.models import Accounts
 from database.core import get_sqlalchemy_async_database_helper
+from database.schemas import AccountSchema
 from .abstract import AbstractAccountsRepository
 from .schemas import AddAccountSchema, AccountID
+from ..users.schemas import SuccessfulMessageJSON, UnsuccessfulMessageJSON, UserID
 
 
 @dataclass
@@ -28,23 +31,65 @@ class SQLAlchemyPostgresAccountRepository(AbstractAccountsRepository):
             await session.commit()
             return AccountID(value=response.scalar_one())
 
-    async def deactivate_account(self):
-        ...
+    async def deactivate_account(self, account_id: AccountID) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        async with self.session_factory() as session:
+            stmt = update(Accounts)\
+                .where(Accounts.id == account_id.value)\
+                .values(account_status=AccountStatus.DISABLED)
+            await session.execute(stmt)
+            await session.commit()
+            return SuccessfulMessageJSON()
 
-    async def activate_account(self):
-        ...
+    async def activate_account(self, account_id: AccountID) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        async with self.session_factory() as session:
+            stmt = update(Accounts).where(Accounts.id == account_id.value).values(account_status=AccountStatus.ACTIVE)
+            await session.execute(stmt)
+            await session.commit()
+            return SuccessfulMessageJSON()
 
-    async def get_account_by_id(self):
-        ...
+    async def get_account_by_id(self, account_id: AccountID) -> AccountSchema:
+        async with self.session_factory() as session:
+            stmt = select(Accounts).where(Accounts.id == account_id.value)
+            account = await session.execute(stmt)
+            return account.scalar_one().convert_to_pydantic_model()
 
-    async def get_all_user_accounts_by_handler_id(self):
-        ...
+    async def get_all_user_accounts_by_handler_id(self, handler_id: UserID) -> list[AccountSchema]:
+        async with self.session_factory() as session:
+            stmt = select(Accounts).where(Accounts.handler_id == handler_id.value)
+            accounts = await session.execute(stmt)
+            return [account.convert_to_pydantic_model() for account in accounts.scalars()]
 
-    async def increase_balance(self):
-        ...
+    async def get_total_balance_by_account_id(self, account_id: AccountID) -> float:
+        async with self.session_factory() as session:
+            stmt = select(Accounts.balance).where(Accounts.id == account_id.value)
+            balance = await session.execute(stmt)
+            return balance.scalar_one()
 
-    async def decrease_balance(self):
-        ...
+    async def increase_balance(
+            self,
+            value: float,
+            account_id: AccountID
+    ) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        async with self.session_factory() as session:
+            stmt = select(Accounts).where(Accounts.id == account_id.value)
+            result = await session.execute(stmt)
+            account_for_increase = result.scalar_one()
+            account_for_increase.balance += value
+            await session.commit()
+            return SuccessfulMessageJSON()
+
+    async def decrease_balance(
+            self,
+            value: float,
+            account_id: AccountID
+    ) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        async with self.session_factory() as session:
+            stmt = select(Accounts).where(Accounts.id == account_id.value)
+            result = await session.execute(stmt)
+            account_for_decrease = result.scalar_one()
+            account_for_decrease.balance -= value
+            await session.commit()
+            return SuccessfulMessageJSON()
 
 
 def get_sqlalchemy_postgres_accounts_repository() -> SQLAlchemyPostgresAccountRepository:
