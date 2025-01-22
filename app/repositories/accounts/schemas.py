@@ -19,3 +19,7 @@ class AddAccountSchema(AddAccountFromEndpointsSchema):
 
 class AccountID(BaseModel):
     value: str
+
+
+class Balance(BaseModel):
+    value: float
