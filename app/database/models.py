@@ -83,3 +83,18 @@ class Transactions(Base):
             status=self.status,
             transaction_date=self.transaction_date
         )
+
+
+class Passwords(Base):
+    __tablename__ = "passwords"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), primary_key=True)
+    password: Mapped[str]
+
+
+class Sessions(Base):
+    __tablename__ = "sessions"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), primary_key=True)
+    session_id: Mapped[str] = mapped_column(unique=True)
+    banned: Mapped[bool] = mapped_column(default=False)
