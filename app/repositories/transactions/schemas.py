@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from database.enums import TransactionStatus, OperationType
+from database.enums import TransactionStatus
 
 
 class AddTransactionFromEndpointsSchema(BaseModel):
@@ -14,7 +14,6 @@ class AddTransactionFromEndpointsSchema(BaseModel):
 class AddTransactionSchema(AddTransactionFromEndpointsSchema):
     id: str
     status: TransactionStatus
-    operation_type: OperationType
     transaction_date: datetime
 
 

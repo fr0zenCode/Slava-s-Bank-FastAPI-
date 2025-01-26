@@ -32,5 +32,4 @@ class TransactionSchema(BaseModel):
     initializer_id: str
     recipient_id: str
     status: TransactionStatus
-    operation_type: OperationType
     transaction_date: datetime

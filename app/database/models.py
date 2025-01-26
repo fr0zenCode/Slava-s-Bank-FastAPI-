@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.core import Base
-from database.enums import TransactionStatus, AccountStatus, OperationType
+from database.enums import TransactionStatus, AccountStatus
 from database.schemas import UserSchema, AccountSchema, TransactionSchema
 
 
@@ -69,7 +69,6 @@ class Transactions(Base):
     initializer_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), nullable=False)
     recipient_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), nullable=False)
     status: Mapped[TransactionStatus] = mapped_column(default=TransactionStatus.PENDING)
-    operation_type: Mapped[OperationType]
     transaction_date: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
     initializer: Mapped["Accounts"] = relationship("Accounts", foreign_keys=[initializer_id])
@@ -82,6 +81,5 @@ class Transactions(Base):
             initializer_id=self.initializer_id,
             recipient_id=self.recipient_id,
             status=self.status,
-            operation_type=self.operation_type,
             transaction_date=self.transaction_date
         )
