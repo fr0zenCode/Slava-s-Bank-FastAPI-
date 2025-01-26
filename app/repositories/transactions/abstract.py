@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
+from database.enums import TransactionStatus
+from repositories.accounts.schemas import AccountID
 from repositories.transactions.schemas import TransactionID, AddTransactionSchema, TransactionSchema
-from repositories.users.schemas import UserID
+from repositories.users.schemas import SuccessfulMessageJSON, UnsuccessfulMessageJSON
 
 
 @dataclass
@@ -16,5 +18,13 @@ class AbstractTransactionsRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_all_users_transactions_by_user_id(self, user_id: UserID) -> list[TransactionSchema]:
+    async def change_transaction_status(
+            self,
+            transaction_id: TransactionID,
+            transaction_status: TransactionStatus
+    ) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        ...
+
+    @abstractmethod
+    async def get_all_users_transactions_by_account_id(self, account_id: AccountID) -> list[TransactionSchema]:
         ...
