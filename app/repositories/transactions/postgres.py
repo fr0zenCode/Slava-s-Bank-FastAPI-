@@ -58,5 +58,5 @@ class PostgresTransactionsRepository(AbstractTransactionsRepository):
             return [transaction.convert_to_pydantic_model() for transaction in transactions.scalars()]
 
 
-def get_sqlalchemy_postgres_transactions_repository() -> PostgresTransactionsRepository:
+def get_sqlalchemy_postgres_transactions_repository() -> AbstractTransactionsRepository:
     return PostgresTransactionsRepository()
