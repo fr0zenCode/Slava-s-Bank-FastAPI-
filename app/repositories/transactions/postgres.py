@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update, or_
 
 from database.core import get_sqlalchemy_async_database_helper
+from database.enums import TransactionStatus
 from database.models import Transactions
 from .abstract import AbstractTransactionsRepository
 from .schemas import AddTransactionSchema, TransactionID, TransactionSchema
-from ..users.schemas import UserID
+from ..accounts.schemas import AccountID
+from ..users.schemas import SuccessfulMessageJSON, UnsuccessfulMessageJSON
 
 
 @dataclass
@@ -23,7 +25,6 @@ class PostgresTransactionsRepository(AbstractTransactionsRepository):
                 initializer_id=transaction.initializer_id,
                 recipient_id=transaction.recipient_id,
                 status=transaction.status,
-                operation_type=transaction.operation_type,
                 transaction_date=transaction.transaction_date
             ).returning(Transactions.id)
             new_transaction_id = await session.execute(stmt)
@@ -36,12 +37,25 @@ class PostgresTransactionsRepository(AbstractTransactionsRepository):
             transaction = await session.execute(stmt)
             return transaction.scalar_one().convert_to_pydantic_model()
 
-    async def get_all_users_transactions_by_user_id(self, user_id: UserID) -> list[TransactionSchema]:
+    async def change_transaction_status(
+            self,
+            transaction_id: TransactionID,
+            transaction_status: TransactionStatus
+    ) -> SuccessfulMessageJSON | UnsuccessfulMessageJSON:
+        async with self.session_factory() as session:
+            stmt = update(Transactions)\
+                .where(Transactions.id == transaction_id.value).values(status=transaction_status)
+            await session.execute(stmt)
+            await session.commit()
+            return SuccessfulMessageJSON()
+
+    async def get_all_users_transactions_by_account_id(self, account_id: AccountID) -> list[TransactionSchema]:
         async with self.session_factory() as session:
             stmt = select(Transactions)\
-                .where(Transactions.initializer_id == user_id.value or Transactions.recipient_id == user_id.value)
+                .where(or_(Transactions.initializer_id == account_id.value,
+                           Transactions.recipient_id == account_id.value))
             transactions = await session.execute(stmt)
-            return [transaction.conver_to_pydantic_model() for transaction in transactions.scalars()]
+            return [transaction.convert_to_pydantic_model() for transaction in transactions.scalars()]
 
 
 def get_sqlalchemy_postgres_transactions_repository() -> PostgresTransactionsRepository:
